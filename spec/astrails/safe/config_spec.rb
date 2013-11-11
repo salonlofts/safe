@@ -1,4 +1,4 @@
-require 'spec_helper'
+require './spec_helper'
 
 describe Astrails::Safe::Config do
   it "should parse example config" do
@@ -15,7 +15,7 @@ describe Astrails::Safe::Config do
       s3 do
         key "s3 key"
         secret "secret"
-        bucket "bucket"
+        bucket_name "bucket_name"
         path "path1"
       end
 
@@ -124,7 +124,7 @@ describe Astrails::Safe::Config do
       "s3" => {
         "key" => "s3 key",
         "secret" => "secret",
-        "bucket" => "bucket",
+        "bucket_name" => "bucket_name",
         "path" => "path1",
       },
 
@@ -272,13 +272,13 @@ describe Astrails::Safe::Config do
 
   it 'should accept multiple levels of data hash' do
     config = Astrails::Safe::Config::Node.new nil, tar: {
-      s3: { bucket: '_bucket', key: '_key', secret: '_secret', },
+      s3: { bucket_name: '_bucket_name', key: '_key', secret: '_secret', },
       keep: { s3: 2 }
     }
 
     config.to_hash.should == {
       'tar' => {
-        's3' => { 'bucket' => '_bucket', 'key' => '_key', 'secret' => '_secret', },
+        's3' => { 'bucket_name' => '_bucket_name', 'key' => '_key', 'secret' => '_secret', },
         'keep' => { 's3' => 2 }
       }
     }

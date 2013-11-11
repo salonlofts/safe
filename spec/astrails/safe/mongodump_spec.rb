@@ -1,4 +1,4 @@
-require 'spec_helper'
+require './spec_helper'
 
 describe Astrails::Safe::Mongodump do
   def def_config

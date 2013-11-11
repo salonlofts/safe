@@ -24,7 +24,7 @@ DESC
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "aws-s3"
+  spec.add_dependency "aws-sdk"
   spec.add_dependency "cloudfiles"
   spec.add_dependency "net-sftp"
 

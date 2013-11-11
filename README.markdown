@@ -141,7 +141,7 @@ The procedure to create and transfer the key is as follows:
       s3 do
         key "...................."
         secret "........................................"
-        bucket "backup.astrails.com"
+        bucket_name "backup.astrails.com"
         path "servers/alpha/:kind/:id"
       end
 

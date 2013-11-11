@@ -3,10 +3,15 @@ module Astrails
     class S3 < Sink
       MAX_S3_FILE_SIZE = 5368709120
 
+      def initialize(config, backup)
+        super(config, backup)
+        @connection = AWS::S3.new(:access_key_id => key, :secret_access_key => secret) unless local_only?
+      end
+
       protected
 
       def active?
-        bucket && key && secret
+        bucket_name && key && secret
       end
 
       def path
@@ -17,19 +22,16 @@ module Astrails
         # FIXME: user friendly error here :)
         raise RuntimeError, "pipe-streaming not supported for S3." unless @backup.path
 
-        # needed in cleanup even on dry run
-        AWS::S3::Base.establish_connection!(:access_key_id => key, :secret_access_key => secret, :use_ssl => true) unless local_only?
-
-        puts "Uploading #{bucket}:#{full_path}" if verbose? || dry_run?
+        puts "Uploading #{bucket_name}:#{full_path}" if verbose? || dry_run?
         unless dry_run? || local_only?
           if File.stat(@backup.path).size > MAX_S3_FILE_SIZE
             STDERR.puts "ERROR: File size exceeds maximum allowed for upload to S3 (#{MAX_S3_FILE_SIZE}): #{@backup.path}"
             return
           end
           benchmark = Benchmark.realtime do
-            AWS::S3::Bucket.create(bucket) unless bucket_exists?(bucket)
+            bucket = @connection.buckets.create(bucket_name) #unless bucket_exists?(bucket_name)
             File.open(@backup.path) do |file|
-              AWS::S3::S3Object.store(full_path, file, bucket)
+              bucket.objects.create(full_path, file)
             end
           end
           puts "...done" if verbose?
@@ -42,8 +44,8 @@ module Astrails
 
         return unless keep = config[:keep, :s3]
 
-        puts "listing files: #{bucket}:#{base}*" if verbose?
-        files = AWS::S3::Bucket.objects(bucket, :prefix => base, :max_keys => keep * 2)
+        puts "listing files: #{bucket_name}:#{base}*" if verbose?
+        files = @connection.buckets[bucket_name].objects.with_prefix(base)
         puts files.collect {|x| x.key} if verbose?
 
         files = files.
@@ -51,13 +53,13 @@ module Astrails
           sort
 
         cleanup_with_limit(files, keep) do |f|
-          puts "removing s3 file #{bucket}:#{f}" if dry_run? || verbose?
-          AWS::S3::Bucket.objects(bucket, :prefix => f)[0].delete unless dry_run? || local_only?
+          puts "removing s3 file #{bucket_name}:#{f}" if dry_run? || verbose?
+          @connection.buckets[bucket].objects[f].delete unless dry_run? || local_only?
         end
       end
 
-      def bucket
-        config[:s3, :bucket]
+      def bucket_name
+        config[:s3, :bucket_name]
       end
 
       def key
@@ -69,11 +71,9 @@ module Astrails
       end
 
       private
-      
-      def bucket_exists?(bucket)
-        true if AWS::S3::Bucket.find(bucket)
-      rescue AWS::S3::NoSuchBucket
-        false
+
+      def bucket_exists?(bucket_name)
+        @connection.buckets[bucket_name].exists?
       end
     end
   end

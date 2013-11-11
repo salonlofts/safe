@@ -23,13 +23,13 @@ safe do
   # s3 do
   #   key YOUR_S3_KEY
   #   secret YOUR_S3_SECRET
-  #   bucket S3_BUCKET
+  #   bucket_name S3_BUCKET
   #   # path for uploads to S3. supports same substitution like :local/:path
   #   path ":kind/" # this is default
   # end
 
   ## alternative style:
-  # s3 :key => YOUR_S3_KEY, :secret => YOUR_S3_SECRET, :bucket => S3_BUCKET, :path => ":kind/"
+  # s3 :key => YOUR_S3_KEY, :secret => YOUR_S3_SECRET, :bucket_name => S3_BUCKET, :path => ":kind/"
 
   ## uncomment to enable uploads to Rackspace Cloud Files
   ## http://www.rackspacecloud.com/cloud_hosting_products/files
