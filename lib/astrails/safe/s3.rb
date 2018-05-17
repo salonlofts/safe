@@ -5,7 +5,8 @@ module Astrails
 
       def initialize(config, backup)
         super(config, backup)
-        @connection = AWS::S3.new(:access_key_id => key, :secret_access_key => secret) unless local_only?
+        credentials = Aws::Credentials.new(key, secret)
+        @connection = Aws::S3::Resource.new(:credentials => credentials) unless local_only?
       end
 
       protected
@@ -29,9 +30,10 @@ module Astrails
             return
           end
           benchmark = Benchmark.realtime do
-            bucket = @connection.buckets.create(bucket_name) #unless bucket_exists?(bucket_name)
+            bucket = @connection.create_bucket(:bucket => bucket_name) #unless bucket_exists?(bucket_name)
             File.open(@backup.path) do |file|
-              bucket.objects.create(full_path, file)
+              bucket.object(full_path).upload_file(file)
+              # bucket.objects.create(full_path, file)
             end
           end
           puts "...done" if verbose?
@@ -44,8 +46,8 @@ module Astrails
 
         return unless keep = config[:keep, :s3]
 
-        puts "listing files: #{bucket_name}:#{base}*" if verbose?
-        files = @connection.buckets[bucket_name].objects.with_prefix(base)
+        puts "listing files: #{bucket_name}:#{base}" if verbose?
+        files = @connection.bucket(bucket_name).objects(prefix: base)
         puts files.collect {|x| x.key} if verbose?
 
         files = files.
@@ -54,7 +56,7 @@ module Astrails
 
         cleanup_with_limit(files, keep) do |f|
           puts "removing s3 file #{bucket_name}:#{f}" if dry_run? || verbose?
-          @connection.buckets[bucket].objects[f].delete unless dry_run? || local_only?
+          @connection.bucket(bucket_name).object(f).delete unless dry_run? || local_only?
         end
       end
 
@@ -73,7 +75,7 @@ module Astrails
       private
 
       def bucket_exists?(bucket_name)
-        @connection.buckets[bucket_name].exists?
+        @connection.bucket(bucket_name).exists?
       end
     end
   end
