@@ -6,7 +6,7 @@ module Astrails
       def initialize(config, backup)
         super(config, backup)
         credentials = Aws::Credentials.new(key, secret)
-        @connection = Aws::S3::Resource.new(:credentials => credentials) unless local_only?
+        @connection = Aws::S3::Resource.new(:credentials => credentials, :region => region) unless local_only?
       end
 
       protected
@@ -33,7 +33,6 @@ module Astrails
             bucket = @connection.create_bucket(:bucket => bucket_name) #unless bucket_exists?(bucket_name)
             File.open(@backup.path) do |file|
               bucket.object(full_path).upload_file(file)
-              # bucket.objects.create(full_path, file)
             end
           end
           puts "...done" if verbose?
@@ -70,6 +69,10 @@ module Astrails
 
       def secret
         config[:s3, :secret]
+      end
+
+      def region
+        config[:s3, :region]
       end
 
       private
