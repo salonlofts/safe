@@ -1,7 +1,7 @@
 module Astrails
   module Safe
     class S3 < Sink
-      MAX_S3_FILE_SIZE = 5368709120
+      # MAX_S3_FILE_SIZE = 5368709120
 
       def initialize(config, backup)
         super(config, backup)
@@ -25,10 +25,10 @@ module Astrails
 
         puts "Uploading #{bucket_name}:#{full_path}" if verbose? || dry_run?
         unless dry_run? || local_only?
-          if File.stat(@backup.path).size > MAX_S3_FILE_SIZE
-            STDERR.puts "ERROR: File size exceeds maximum allowed for upload to S3 (#{MAX_S3_FILE_SIZE}): #{@backup.path}"
-            return
-          end
+          # if File.stat(@backup.path).size > MAX_S3_FILE_SIZE
+          #   STDERR.puts "ERROR: File size exceeds maximum allowed for upload to S3 (#{MAX_S3_FILE_SIZE}): #{@backup.path}"
+          #   return
+          # end
           benchmark = Benchmark.realtime do
             bucket = @connection.create_bucket(:bucket => bucket_name) #unless bucket_exists?(bucket_name)
             File.open(@backup.path) do |file|
